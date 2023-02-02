@@ -107,4 +107,6 @@ I'm not including here the actual code to load PIL image and vae encoding/decodi
 
 ---
 
-Thanks for reading.
+Thanks for reading. Please let me know if there is incorrect information here.
+
+TODO: understand how predicted noise from unet and lms noise scheduling works exactly
