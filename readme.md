@@ -44,10 +44,13 @@ which is what the equation was telling...
 ## The noise
 
 if you generate 100 random numbers, like:
+
     r = torch.rand(100)
+    
 the numbers you get will be between 0 and 1, and all values will be equally probable.
 
 However, stable diffusion uses 'Gaussian noise', which you can generate by:
+
     r = torch.randn(100)
 
 in this case, the numbers you get will be mostly between -3 and +3, and rarely out of this range. 
@@ -83,10 +86,12 @@ What this means is, to directly get the noisy image at any step, you can use:
     noisy_image_at_step = original_image * image_weight_acp  + noise * noise_weight_acp
 
 again, this is precalculated in lms scheduler:
+
     alphas = 1.0 - betas
     alphas_cumprod = torch.cumprod(alphas, dim=0)
 
 then:
+
     image_weight_acp = alphas_cumprod[step] ** 0.5
     noise_weight_acp = (1 - alphas_cumprod[step]) ** 0.5
 
