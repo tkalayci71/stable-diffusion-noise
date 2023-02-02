@@ -3,6 +3,7 @@
 (I consider myself a programmer but I've been learning Python since getting interested in Stable Diffusion a few months back. A document like this would be useful to me at the beginning, so I made it hoping it could be useful to someone else,)
 
 ####Define a list:
+
     things = ['apple','orange','banana']
     print(things) # prints ['apple', 'orange', 'banana']
     print(len(things)) # prints 3
@@ -11,6 +12,7 @@
     print(things[2]) # prints banana
 
 ####Define a list of numbers:
+
     data = [10,20,30,40,50]
     print(data) # prints [10, 20, 30, 40, 50]
     print(len(data)) # prints 5
@@ -21,6 +23,7 @@
     print(some_data) # prints [20, 30, 40]
 
 ####To work exclusively on numbers, use numpy library:
+
     import numpy as np
     data = [0,1,2,3,4,5,6,7,8,9]
     data = np.array(data) # convert list to numpy array
@@ -30,6 +33,7 @@
     print(data) # prints [ 0  2  4  6  8 10 12 14 16 18]
 
 ####Numpy works on CPU. Torch library can work also on GPU/cuda:
+
     import torch
     data = [1,2,3,4]
     data = torch.tensor(data) # convert list to torch tensor
@@ -46,6 +50,7 @@
     data = data.to('cpu') # move data back to CPU
 
 ####View/access a tensor as multi-dimensional arrays:
+
     data = torch.tensor([0,1,2,3,4,5,6,7])
     print(data.shape) # prints torch.Size([8])
     print(data[7]) # prints tensor(7)
@@ -57,6 +62,7 @@
     print(data[1,0]) # prints tensor(4)
 
 ####Tensor data types:
+
     data = torch.tensor([1, 2, 3]) # integer data
     print(data.dtype) # prints torch.int64
 
@@ -69,6 +75,7 @@
     print(data) # prints tensor([3.1406, 9.9922], dtype=torch.float16)
 
 ####All sorts of operations are available:
+
     data = torch.tensor([1, 64, 100])
     data = data ** 0.5 # take the square root
     print(data) # prints tensor([ 1.,  8., 10.])
