@@ -107,6 +107,8 @@ I'm not including here the actual code to load PIL image and vae encoding/decodi
 
 ---
 
-Thanks for reading. Please let me know if there is incorrect information here.
+Thanks for reading. Please let me know if you spot incorrect information here.
 
-TODO: understand how predicted noise from unet and lms noise scheduling works exactly
+---
+
+update: after simplifying lms scheduler by decreasing order to 1, I have obtained a simple diffusion loop which probably is the same as euler method. see https://github.com/tkalayci71/mini-diffusion for working implementation.
