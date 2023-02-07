@@ -36,11 +36,6 @@ How to calculate them? Examining lms scheduler reveals this precalculation:
     alphas = 1.0 - betas
     alphas_cumprod = torch.cumprod(alphas, dim=0)
 
-    num_train_timesteps = 1000
-    beta_start = 0.00085
-    beta_end = 0.012
-    betas = torch.linspace(beta_start**0.5, beta_end**0.5, num_train_timesteps) ** 2
-
 It turns out, the weights are calculated as:
 
         weight_image = (1-betas[step])**0.5
