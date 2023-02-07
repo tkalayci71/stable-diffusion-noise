@@ -34,8 +34,6 @@ How to calculate them? Examining lms scheduler reveals this precalculation:
     beta_start: float = 0.00085
     beta_end: float = 0.012
     betas = torch.linspace(beta_start**0.5, beta_end**0.5, num_train_timesteps) ** 2
-    alphas = 1.0 - betas
-    alphas_cumprod = torch.cumprod(alphas, dim=0)
 
 It turns out, the weights are calculated as:
 
