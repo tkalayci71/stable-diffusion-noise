@@ -25,9 +25,9 @@ If Stable diffusion was trained with 1000 noising steps, I would imagine, naivel
 
 However, they forget to mention that noise is not just added, it's mixed, so it's more like:
 
-        image = image * weight_image + noise * weight_noise
+        image = image * image_mix + noise * noise_mix
 
-In reality, these weights are not constants, have different values at each step.
+In reality, these mixing weights are not constants, have different values at each step.
 How to calculate them? Examining lms scheduler reveals this precalculation:
 
     num_train_timesteps: int = 1000
@@ -39,8 +39,8 @@ How to calculate them? Examining lms scheduler reveals this precalculation:
 
 It turns out, the weights are calculated as:
 
-        weight_image = (1-betas[step])**0.5
-        weight_noise = betas[step]**0.5
+        image_mix = (1-betas[step])**0.5
+        noise_mix = betas[step]**0.5
 
 which is what the equation was telling... 
 
@@ -86,7 +86,7 @@ The loop above is valid if you want to generate 1000 noisy versions of an image.
 
 What this means is, to directly get the noisy image at any step, you can use:
 
-    noisy_image_at_step = original_image * image_weight_acp  + noise * noise_weight_acp
+    noisy_image_at_step = original_image * image_weight + noise * noise_weight
 
 again, this is precalculated in lms scheduler:
 
@@ -95,8 +95,8 @@ again, this is precalculated in lms scheduler:
 
 then:
 
-    image_weight_acp = alphas_cumprod[step] ** 0.5
-    noise_weight_acp = (1 - alphas_cumprod[step]) ** 0.5
+    image_weight = alphas_cumprod[step] ** 0.5
+    noise_weight = (1 - alphas_cumprod[step]) ** 0.5
 
 if you check the noise weight value for the last step, it's 0.9977. It seems the beta start and end values were carefully selected to make the last noisy version almost pure noise.
 
