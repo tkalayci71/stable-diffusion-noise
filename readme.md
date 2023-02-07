@@ -29,6 +29,13 @@ However, they forget to mention that noise is not just added, it's mixed, so it'
 In reality, these weights are not constants, have different values at each step.
 How to calculate them? Examining lms scheduler reveals this precalculation:
 
+    num_train_timesteps: int = 1000
+    beta_start: float = 0.00085
+    beta_end: float = 0.012
+    betas = torch.linspace(beta_start**0.5, beta_end**0.5, num_train_timesteps) ** 2
+    alphas = 1.0 - betas
+    alphas_cumprod = torch.cumprod(alphas, dim=0)
+
     num_train_timesteps = 1000
     beta_start = 0.00085
     beta_end = 0.012
@@ -112,3 +119,85 @@ Thanks for reading. Please let me know if you spot incorrect information here.
 ---
 
 update: after simplifying lms scheduler by decreasing order to 1, I have obtained a simple diffusion loop which probably is the same as euler method. see https://github.com/tkalayci71/mini-diffusion for working implementation.
+See below for more explanations.
+
+---
+
+## Recap
+
+As Stable Diffusion denoising is a delicate and chaotic process, we have to match the exact levels of noise used while the model was trained. Following precalculations are a given for 1000 steps:
+
+    num_train_timesteps: int = 1000
+    beta_start: float = 0.00085
+    beta_end: float = 0.012
+    betas = torch.linspace(beta_start**0.5, beta_end**0.5, num_train_timesteps) ** 2
+    alphas = 1.0 - betas
+    alphas_cumprod = torch.cumprod(alphas, dim=0)
+    image_weights = alphas_cumprod **0.5
+    noise_weights = (1-alphas_cumprod) **0.5
+
+Now noisy image at any timestep can be obtained as:
+
+    def get_noisy_image(original_image, original_noise, step):
+        return original_image * image_weights[step] + original_noise  * noise_weights[step] 
+
+Of course we don't yet know the original image, neither the original noise used while training. Just generate random noise instead, in vae latent format. If target image is 512x512, latents will be 64x64.
+
+    original_image = torch.zeros(1,4,64,64)
+    original_noise = torch.randn(1,4,64,64)
+    noisy_image_at_step_999 = get_noisy_image(original_image, original_noise, 999)
+
+
+## The Unet
+
+Unet is the model that was trained to predict the noise. What it expects as input is:
+
+* noisy image at any timestep
+* the timestep value
+* text embeddings. 
+
+Text embeddings is the numerical representation of your prompt, consisting of 77x768 numbers. I'm ignoring it for now, since Unet works even if you pass all zeroes as text embeddings. (Of course in this case you get a random image, but still somewhat coherent)
+
+What Unet outputs is the predicted original noise, without any scaling. With some scaling and subtracting the predicted noise, you can obtain a predicted original image.
+
+However, if you just pass pure noise to unet and obtain the original image from that, you get a very blurry image. Therefore adding some of the noise back and reiterating becomes necessary.
+
+## Timesteps
+
+Rather than 1000 steps, it will be faster do it in a small number of steps: 
+
+    steps = 10
+    timesteps = torch.linspace(num_train_timesteps-1,0,steps,dtype=torch.int64)
+    # timesteps= tensor([999, 888, 777, 666, 555, 444, 333, 222, 111,   0])
+
+Extract image and noise weights for the selected timesteps, append 1.0 and 0.0 for convenience:
+
+    image_weights = image_weights[timesteps]
+    image_weights = torch.concat([image_weights,torch.tensor([1.0])])
+    # image_weights= tensor([0.0683, 0.1265, 0.2120, 0.3242, 0.4563, 0.5967, 0.7314, 0.8480, 0.9383, 0.9996, 1.0000])
+    noise_weights = noise_weights[timesteps]
+    noise_weights = torch.concat([noise_weights,torch.tensor([0.0])])
+    # noise_weights= tensor([0.9977, 0.9920, 0.9773, 0.9460, 0.8898, 0.8025, 0.6819, 0.5300, 0.3459, 0.0292, 0.0000])
+
+Note that now the step value you pass to get noisy image function refers to our selected timestep index.
+
+## Diffusion loop
+
+Now a simplest diffusion loop would be:
+
+    text_embeddings = torch.zeros(1,77,768)
+    noisy_image = noisy_image_at_step_999
+    for step in range(len(timesteps)):
+        predicted_noise = call_unet(noisy_image, timesteps[step], text_embeddings)
+        original_image = (noisy_image - predicted_noise * noise_weights[step]) / image_weights[step]
+        noisy_image = get_noisy_image(original_image, predicted_noise, step+1)
+
+## CFG Scale
+
+To generate images related to a text prompt, you generate text embeddings by using the CLIP text encoder model and pass that to unet. Then unet will then predict noise related to your prompt. However, not as strong as we would like.
+
+They found a way to increase prompt strength, which is CFG scale. Simply, by processing two latents at the same time, one using an empty prompt, and one from your text prompt, then applying the following formula to boost the predicted noise:
+
+    predicted_noise = noise_pred_empty + cfg_scale * (noise_pred_text - noise_pred_empty)
+
+You can pass 2 image latents and 2 timesteps and 2 text embeddings to unet (which will process them in parallel as much as your hardware allows), and you get 2 predicted noise latents and use them in the formula above. Also, later, the empty prompt became the negative prompt, which lets you manipulate the output image even further.
