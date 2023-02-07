@@ -1,6 +1,7 @@
 ## Noise in Stable Diffusion, from a programmer's perspective
 
 We've all seen images like this, where more noise is added to the image at each step:
+
 ![image](add_noise.png)
 
 but how would one actually implement this? Below are my findings.
@@ -189,10 +190,10 @@ Now a simplest diffusion loop would be:
 
 ## CFG Scale
 
-To generate images related to a text prompt, you generate text embeddings by using the CLIP text encoder model and pass that to unet. Then unet will then predict noise related to your prompt. However, not as strong as we would like.
+To generate images related to a text prompt, you generate text embeddings by using the CLIP text encoder model and pass that to unet. Then unet will predict noise related to your prompt. However, not as strong as we would like.
 
 They found a way to increase prompt strength, which is CFG scale. Simply, by processing two latents at the same time, one using an empty prompt, and one from your text prompt, then applying the following formula to boost the predicted noise:
 
     predicted_noise = noise_pred_empty + cfg_scale * (noise_pred_text - noise_pred_empty)
 
-You can pass 2 image latents and 2 timesteps and 2 text embeddings to unet (which will process them in parallel as much as your hardware allows), and you get 2 predicted noise latents and use them in the formula above. Also, later, the empty prompt became the negative prompt, which lets you manipulate the output image even further.
+You can pass 2 image latents and 2 timesteps and 2 text embeddings to unet (which will process them in parallel as much as your hardware allows), and you get 2 predicted noise latents and use them in the formula above. Also, later, the empty prompt became the negative prompt, letting you manipulate the output image even further.
