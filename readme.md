@@ -12,7 +12,7 @@ This cryptic notation
 
 ![image](noise_equation.png)
 
-is not helpful at all... not to me anyway
+is not helpful, not to me anyway. (but if it is to you, go to https://theaisummer.com/diffusion-models/ instead)
 
 ---
 
