@@ -195,3 +195,37 @@ They found a way to increase prompt strength, which is CFG scale. Simply, by pro
     predicted_noise = noise_pred_empty + cfg_scale * (noise_pred_text - noise_pred_empty)
 
 You can pass 2 image latents and 2 timesteps and 2 text embeddings to unet (which will process them in parallel as much as your hardware allows), and you get 2 predicted noise latents and use them in the formula above. Also, later, the empty prompt became the negative prompt, letting you manipulate the output image even further.
+
+
+## Experiments
+
+Some things I found:
+
+Negative noise. This kind of switches dark/light parts of the result image:
+
+    initial_noise = initial_noise * -1.0
+    
+Flipped noise. Not always results in flipped images.
+
+    initial_noise = torch.flip(initial_noise,dims=[2])
+  
+Messing with some parameters. This makes result image more high contrast:
+
+    beta_start: float = 0.00085 * 2
+
+Quantized noise (with adjusted mean and std). This has surprisingly little effect:
+
+    initial_noise = torch.randn(1,4,64,64)
+    initial_noise = torch.ceil(initial_noise)
+    initial_noise = initial_noise - torch.mean(initial_noise)
+    initial_noise = initial_noise / torch.std(initial_noise,unbiased=True)    
+    
+Regular noise (with adjusted mean and std). SD seems to tolerate this. Results are not necessarily better but different.
+
+    initial_noise = torch.rand(1,4,64,64)
+    initial_noise = initial_noise - torch.mean(initial_noise)
+    initial_noise = initial_noise / torch.std(initial_noise,unbiased=True)
+    
+## Thoughts
+
+It is said that SD does not store training images, but stores distribution. It's unclear, do they mean histogram, or, mean and std, or something else? Either way, how do you recover data from distribution? If you store just mean and std of an image, almost infinite number of possible images would fit the bill . I can only speculate that if you store multiple distributions for different parts of the image, that would decrease number of  possible solutions. This seems plausible since Unet downsamples and upsamples the image multiple times. I'm starting to think this whole 'denoising' process may be similar to fourier transformation which I'm familiar with. If anyone really knows how this actually works, please let me know.
