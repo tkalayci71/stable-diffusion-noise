@@ -236,7 +236,7 @@ With img2img, denoising strength=1.0, initial noise and image are mixed as:
 
 latents = noise * 0.9996  + image * 0.0292
 
-Note that txt2img is roughly equivalent to img2img with a half-gray image (not black!).
+Note that txt2img is roughly equivalent to img2img with a half-gray image (not black!), since the values are expected to be signed).
 
 Despite the small multiplier, the initial image affects the result way more than I would assume, as the following test shows:
 
