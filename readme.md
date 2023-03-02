@@ -230,11 +230,11 @@ Regular noise (with adjusted mean and std). SD seems to tolerate this. Results a
 
 With txt2img, starting latents is almost equal to noise:
 
-latents = noise * 0.9996
+latents = noise * 0.9977
 
 With img2img, denoising strength=1.0, initial noise and image are mixed as:
 
-latents = noise * 0.9996  + image * 0.0292
+latents = noise * 0.9977  + image * 0.0683
 
 Note that txt2img is roughly equivalent to img2img with a half-gray image (not black!), since the values are expected to be signed).
 
