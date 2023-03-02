@@ -226,6 +226,24 @@ Regular noise (with adjusted mean and std). SD seems to tolerate this. Results a
     initial_noise = initial_noise - torch.mean(initial_noise)
     initial_noise = initial_noise / torch.std(initial_noise,unbiased=True)
     
-## Thoughts
+## txt2img vs img2img
 
-It is said that SD does not store training images, but stores distribution. It's unclear, do they mean histogram, or, mean and std, or something else? Either way, how do you recover data from distribution? If you store just mean and std of an image, almost infinite number of possible images would fit the bill . I can only speculate that if you store multiple distributions for different parts of the image, that would decrease number of  possible solutions. This seems plausible since Unet downsamples and upsamples the image multiple times. I'm starting to think this whole 'denoising' process may be similar to fourier transformation which I'm familiar with. If anyone really knows how this actually works, please let me know.
+With txt2img, starting latents is almost equal to noise:
+
+latents = noise * 0.9996
+
+With img2img, denoising strength=1.0, initial noise and image are mixed as:
+
+latents = noise * 0.9996  + image * 0.0292
+
+Note that txt2img is roughly equivalent to img2img with a half-gray image (not black!).
+
+Despite the small multiplier, the initial image affects the result way more than I would assume, as the following test shows:
+
+![image](img2img.jpg)
+
+Also, txt2img result is not exactly the same as half-gray, composition-wise. This is because VAE encoder does not output all zeroes for half-gray image.
+
+    Prompt: underwater, sunbeams, light rays, reflections, sparkle, shimmer, bubbles, seashells, pearls, glitter, bling Negative prompt: cartoon Steps: 20, Sampler: Heun, CFG scale: 7, Seed: 3728374670, Size: 768x768, Model hash: 93a10d6661, Model: ProtoGen_X5.3-pruned-fp16
+
+![image](txt2img.jpg)
