@@ -137,7 +137,7 @@ Now noisy image at any timestep can be obtained as:
 
 Of course we don't yet know the original image, neither the original noise used while training. Just generate random noise instead, in vae latent format. If target image is 512x512, latents will be 64x64.
 
-    original_image = torch.zeros(1,4,64,64)
+    original_image = torch.ones(1,4,64,64) * 0.5  #update: assume half-gray image
     original_noise = torch.randn(1,4,64,64)
     noisy_image_at_step_999 = get_noisy_image(original_image, original_noise, 999)
 
