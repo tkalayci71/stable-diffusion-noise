@@ -137,7 +137,7 @@ Now noisy image at any timestep can be obtained as:
 
 Of course we don't yet know the original image, neither the original noise used while training. Just generate random noise instead, in vae latent format. If target image is 512x512, latents will be 64x64.
 
-    original_image = torch.ones(1,4,64,64) * 0.5  #update: assume half-gray image
+    original_image = torch.zeros(1,4,64,64)   #update: assume half-gray image
     original_noise = torch.randn(1,4,64,64)
     noisy_image_at_step_999 = get_noisy_image(original_image, original_noise, 999)
 
@@ -247,3 +247,11 @@ Also, txt2img result is not exactly the same as half-gray, composition-wise. Thi
     Prompt: underwater, sunbeams, light rays, reflections, sparkle, shimmer, bubbles, seashells, pearls, glitter, bling Negative prompt: cartoon Steps: 20, Sampler: Heun, CFG scale: 7, Seed: 3728374670, Size: 768x768, Model hash: 93a10d6661, Model: ProtoGen_X5.3-pruned-fp16
 
 ![image](txt2img.jpg)
+
+### more experiments / todo:
+
+* what image do I get if I decode all zeros with VAE? brownish non-solid image
+* re-encode that with VAE? can't get all zeros back
+* don't add latent noise, use just encoded pixel noise? doesn't seem to work except when CFG scale is high (25)
+* what does pure Red, Green, Blue, Black, White images encode to? todo
+* does SD modify only values in latent space which are out of range in pixel space? todo
